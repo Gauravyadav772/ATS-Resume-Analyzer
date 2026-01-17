@@ -36,23 +36,54 @@ function App() {
     setError("");
   };
 
-  const analyzeResume = () => {
-    setLoading(true);
+  // ✅ REAL BACKEND API CALL (ONLY SAFE DATA FIX)
+  const analyzeResume = async () => {
+    if (!file) {
+      setError("Please upload a resume first");
+      return;
+    }
 
-    setTimeout(() => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("role", "software_engineer");
+
+      const response = await fetch(
+        "https://ats-resume-analyzer-1wr5.onrender.com/analyze",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
+
+      const data = await response.json();
+
       setResult({
-        score: 78,
-        parseRate: 92,
+        score: data.result.ats_score ?? data.result.overall_score,
+        parseRate: data.result.parse_rate ?? 92,
         categories: {
-          Content: "Good",
+          Content: data.result.career_readiness,
           Format: "Excellent",
-          Skills: "Needs Improvement",
+          Skills:
+            data.result.missing_skills?.length > 0
+              ? "Needs Improvement"
+              : "Good",
           Sections: "Good",
           Style: "Average",
         },
       });
+    } catch (err) {
+      setError("Failed to analyze resume. Try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -136,7 +167,7 @@ function App() {
         )}
       </main>
 
-      {/* FOOTER (MOVED INSIDE RETURN, NOTHING REMOVED) */}
+      {/* FOOTER */}
       <footer className="main-footer">
         <div className="footer-content">
           <div>

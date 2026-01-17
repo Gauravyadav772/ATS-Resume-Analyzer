@@ -5,8 +5,6 @@ from utils.resume_analyzer import analyze_resume
 import os
 
 app = Flask(__name__)
-
-# ✅ ALLOW FRONTEND CONNECTION
 CORS(app)
 
 UPLOAD_FOLDER = "uploads"
@@ -14,8 +12,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route("/", methods=["GET"])
 def home():
+    return jsonify({"message": "Backend is running successfully"})
+
+@app.route("/analyze", methods=["GET"])
+def analyze_check():
     return jsonify({
-        "message": "Backend is running successfully"
+        "message": "Analyze endpoint is working. Use POST method."
     })
 
 @app.route("/analyze", methods=["POST"])
@@ -33,14 +35,22 @@ def analyze():
     resume.save(file_path)
 
     text = extract_text_from_pdf(file_path)
+
+    if not text.strip():
+        return jsonify({
+            "error": "Unable to read resume. Upload text-based PDF/DOCX."
+        }), 400
+
     result = analyze_resume(text, role)
 
     return jsonify({
         "status": "success",
         "result": result
     })
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)
+
 
    
 
