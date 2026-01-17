@@ -1,2 +1,6 @@
 flask
+flask-cors
+pdfplumber
+python-docx
 PyPDF2
+gunicorn
